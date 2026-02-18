@@ -46,9 +46,11 @@ A complete toolkit for safely managing temporary flag changes in LaunchDarkly us
 |------|---------|--------|
 | `snapshot-flag.sh` | Captures current flag state to JSON | ✅ Production-tested |
 | `schedule-flag-on.sh` | Schedules flag to turn ON | ✅ Production-tested |
+| `schedule-flag-off.sh` | Schedules flag to turn OFF | ✅ Ready to use |
 | `restore-flag.sh` | Schedules flag to restore from snapshot | ✅ Production-tested |
 | `turn-flag-off.sh` | Immediately turns flag OFF (bonus) | ✅ Production-tested |
 | `LAUNCHDARKLY-FLAG-BACKUP-AND-RESTORE-GUIDE.md` | Complete documentation | 📖 Comprehensive guide |
+| `USAGE-EXAMPLES.md` | Real-world usage examples | 📖 8+ scenarios |
 
 ## 🎯 Use Cases
 
@@ -106,8 +108,9 @@ API_TOKEN="${LD_API_TOKEN}"
 # Step 2: Schedule to turn ON in 5 minutes
 ./schedule-flag-on.sh 5m
 
-# Step 3: Schedule to restore in 2 hours
-./restore-flag.sh flag-snapshot-20260218-140000.json 2h
+# Step 3: Schedule to turn OFF in 2 hours
+./schedule-flag-off.sh 2h
+# Or use restore: ./restore-flag.sh flag-snapshot-20260218-140000.json 2h
 ```
 
 ### Example 2: Weekend Promotion (3 Days)
@@ -119,8 +122,22 @@ API_TOKEN="${LD_API_TOKEN}"
 # Step 2: Schedule to turn ON immediately (1 minute)
 ./schedule-flag-on.sh 1m
 
-# Step 3: Schedule to restore after weekend (3 days)
-./restore-flag.sh flag-snapshot-20260218-140000.json 3d
+# Step 3: Schedule to turn OFF after weekend (3 days)
+./schedule-flag-off.sh 3d
+# Or use restore: ./restore-flag.sh flag-snapshot-20260218-140000.json 3d
+```
+
+### Example 4: Business Hours Feature (Turn OFF at 5 PM)
+
+```bash
+# Morning: Flag is currently ON
+./snapshot-flag.sh
+
+# Schedule to turn OFF at end of day (8 hours from now)
+./schedule-flag-off.sh 8h
+
+# Next day: Schedule to turn ON at 9 AM
+./schedule-flag-on.sh 9h
 ```
 
 ### Example 3: Short Test (30 Minutes)
@@ -157,6 +174,16 @@ That's it! Your flag will:
   - `./schedule-flag-on.sh 2h` - Schedule in 2 hours
   - `./schedule-flag-on.sh 3d` - Schedule in 3 days
   - `./schedule-flag-on.sh` - Schedule in 5 minutes (default)
+
+### schedule-flag-off.sh
+- **Purpose**: Schedules flag to turn OFF at future time
+- **Default**: 5 minutes if no time specified
+- **Supports**: Minutes, hours, and days
+- **Usage**:
+  - `./schedule-flag-off.sh 30m` - Schedule OFF in 30 minutes
+  - `./schedule-flag-off.sh 8h` - Schedule OFF in 8 hours
+  - `./schedule-flag-off.sh 1d` - Schedule OFF in 1 day
+  - `./schedule-flag-off.sh` - Schedule OFF in 5 minutes (default)
 
 ### restore-flag.sh
 - **Purpose**: Schedules flag restoration from snapshot
