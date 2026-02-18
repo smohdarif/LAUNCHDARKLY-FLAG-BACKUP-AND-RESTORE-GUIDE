@@ -444,11 +444,8 @@ API_TOKEN="api-xxxxxxxxxxxxx"
 #### 2. Schedule Banner to Turn ON (Friday 5:50 PM)
 
 ```bash
-# Edit schedule-flag-on.sh to set MINUTES_FROM_NOW=10
-MINUTES_FROM_NOW=10
-
-# Run scheduling
-./schedule-flag-on.sh
+# Run scheduling - turn ON in 10 minutes
+./schedule-flag-on.sh 10m
 ```
 
 **Output:**
@@ -465,8 +462,9 @@ MINUTES_FROM_NOW=10
 #### 3. Schedule Restore to Original State (Friday 5:50 PM)
 
 ```bash
-# Schedule restore for Monday 9 AM (63 hours = 3780 minutes from now)
-./schedule-flag-restore.sh flag-snapshot-20260221-175000.json 3780
+# Schedule restore for Monday 9 AM (63 hours from now)
+./schedule-flag-restore.sh flag-snapshot-20260221-175000.json 63h
+# Or use days: 3d (approximately 2.6 days)
 ```
 
 **Output:**
@@ -492,29 +490,82 @@ After setting up both scheduled changes, verify in the LaunchDarkly UI:
 
 ---
 
-## Timeline Calculation Helper
+## Time Format Support
 
-Use this reference to calculate minutes from now:
+The scripts support flexible time formats for scheduling:
 
-| Time Period | Minutes | Calculation |
-|-------------|---------|-------------|
-| 5 minutes   | 5       | 5 × 1 = 5 |
-| 15 minutes  | 15      | 15 × 1 = 15 |
-| 30 minutes  | 30      | 30 × 1 = 30 |
-| 1 hour      | 60      | 60 × 1 = 60 |
-| 2 hours     | 120     | 60 × 2 = 120 |
-| 4 hours     | 240     | 60 × 4 = 240 |
-| 8 hours     | 480     | 60 × 8 = 480 |
-| 12 hours    | 720     | 60 × 12 = 720 |
-| 24 hours    | 1440    | 60 × 24 = 1440 |
-| 48 hours    | 2880    | 60 × 48 = 2880 |
-| 72 hours    | 4320    | 60 × 72 = 4320 |
-| 1 week      | 10080   | 60 × 24 × 7 = 10080 |
+### Supported Formats
 
-**Quick Calculation Formula:**
+| Format | Description | Examples |
+|--------|-------------|----------|
+| **Minutes** | `m`, `min`, `mins`, `minute`, `minutes` | `5m`, `30mins`, `60minute` |
+| **Hours** | `h`, `hr`, `hrs`, `hour`, `hours` | `2h`, `4hrs`, `12hours` |
+| **Days** | `d`, `day`, `days` | `1d`, `3days`, `7day` |
+| **No Unit** | Plain number (assumes minutes) | `5`, `30`, `120` |
+
+### Usage Examples
+
+```bash
+# Schedule flag to turn ON
+./schedule-flag-on.sh 5m      # 5 minutes
+./schedule-flag-on.sh 2h      # 2 hours
+./schedule-flag-on.sh 3d      # 3 days
+./schedule-flag-on.sh 30      # 30 minutes (no unit = minutes)
+
+# Schedule restore from snapshot
+./restore-flag.sh snapshot.json 30m   # 30 minutes
+./restore-flag.sh snapshot.json 4h    # 4 hours
+./restore-flag.sh snapshot.json 7d    # 7 days
+./restore-flag.sh snapshot.json 120   # 120 minutes
 ```
-minutes = hours × 60
+
+### Time Display
+
+The scripts automatically convert and display time in a human-friendly format:
+
+```bash
+# Input: 30m
+# Display: "Time from now: 30 minute(s)"
+
+# Input: 2h
+# Display: "Time from now: 2 hour(s)"
+
+# Input: 3d
+# Display: "Time from now: 3 day(s)"
+
+# Input: 90m
+# Display: "Time from now: 1 hour(s) 30 minute(s)"
+
+# Input: 2d
+# Display: "Time from now: 2 day(s)"
 ```
+
+## Timeline Quick Reference
+
+| Scenario | Recommended Time | Command Example |
+|----------|------------------|-----------------|
+| Quick test | 5-30 minutes | `./schedule-flag-on.sh 5m` |
+| Lunch break test | 1-2 hours | `./schedule-flag-on.sh 1h` |
+| Business day | 8-12 hours | `./schedule-flag-on.sh 8h` |
+| Weekend event | 2-3 days | `./schedule-flag-on.sh 3d` |
+| Week-long campaign | 7 days | `./schedule-flag-on.sh 7d` |
+
+### Conversion Reference
+
+| Time Description | Short Format | Alternative |
+|-----------------|--------------|-------------|
+| 5 minutes | `5m` | `5` |
+| 15 minutes | `15m` | `15` |
+| 30 minutes | `30m` | `30` |
+| 1 hour | `1h` | `60m` or `60` |
+| 2 hours | `2h` | `120m` or `120` |
+| 4 hours | `4h` | `240m` or `240` |
+| 8 hours | `8h` | `480m` or `480` |
+| 12 hours | `12h` | `720m` or `720` |
+| 1 day | `1d` | `24h` or `1440m` |
+| 2 days | `2d` | `48h` or `2880m` |
+| 3 days | `3d` | `72h` or `4320m` |
+| 1 week | `7d` | `168h` or `10080m` |
 
 ---
 

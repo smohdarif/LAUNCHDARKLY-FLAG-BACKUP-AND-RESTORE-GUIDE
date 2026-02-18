@@ -33,11 +33,11 @@ A complete toolkit for safely managing temporary flag changes in LaunchDarkly us
    # Step 1: Take a snapshot
    ./snapshot-flag.sh
 
-   # Step 2: Schedule flag to turn ON (in 5 minutes)
-   ./schedule-flag-on.sh
+   # Step 2: Schedule flag to turn ON (in 5 minutes by default)
+   ./schedule-flag-on.sh 5m
 
-   # Step 3: Schedule restore (in 60 minutes)
-   ./restore-flag.sh flag-snapshot-YYYYMMDD-HHMMSS.json 60
+   # Step 3: Schedule restore (in 2 hours)
+   ./restore-flag.sh flag-snapshot-YYYYMMDD-HHMMSS.json 2h
    ```
 
 ## 📁 What's Included
@@ -94,9 +94,9 @@ API_TOKEN="${LD_API_TOKEN}"
 3. Create a new access token with **write permissions** for your target environment
 4. Copy the token and use it in your scripts
 
-## ⚡ Quick Example
+## ⚡ Quick Examples
 
-**Scenario:** Enable a promotional banner for 2 hours
+### Example 1: Enable Banner for 2 Hours
 
 ```bash
 # Step 1: Snapshot current state
@@ -104,10 +104,36 @@ API_TOKEN="${LD_API_TOKEN}"
 # Output: flag-snapshot-20260218-140000.json
 
 # Step 2: Schedule to turn ON in 5 minutes
-./schedule-flag-on.sh
+./schedule-flag-on.sh 5m
 
-# Step 3: Schedule to restore in 2 hours (120 minutes)
-./restore-flag.sh flag-snapshot-20260218-140000.json 120
+# Step 3: Schedule to restore in 2 hours
+./restore-flag.sh flag-snapshot-20260218-140000.json 2h
+```
+
+### Example 2: Weekend Promotion (3 Days)
+
+```bash
+# Step 1: Snapshot current state
+./snapshot-flag.sh
+
+# Step 2: Schedule to turn ON immediately (1 minute)
+./schedule-flag-on.sh 1m
+
+# Step 3: Schedule to restore after weekend (3 days)
+./restore-flag.sh flag-snapshot-20260218-140000.json 3d
+```
+
+### Example 3: Short Test (30 Minutes)
+
+```bash
+# Step 1: Snapshot
+./snapshot-flag.sh
+
+# Step 2: Turn ON in 5 minutes
+./schedule-flag-on.sh 5m
+
+# Step 3: Restore in 30 minutes
+./restore-flag.sh flag-snapshot-20260218-140000.json 30m
 ```
 
 That's it! Your flag will:
@@ -124,16 +150,25 @@ That's it! Your flag will:
 
 ### schedule-flag-on.sh
 - **Purpose**: Schedules flag to turn ON at future time
-- **Default**: 5 minutes from execution
-- **Customizable**: Change `MINUTES_FROM_NOW` variable
-- **Usage**: `./schedule-flag-on.sh`
+- **Default**: 5 minutes if no time specified
+- **Supports**: Minutes, hours, and days
+- **Usage**:
+  - `./schedule-flag-on.sh 30m` - Schedule in 30 minutes
+  - `./schedule-flag-on.sh 2h` - Schedule in 2 hours
+  - `./schedule-flag-on.sh 3d` - Schedule in 3 days
+  - `./schedule-flag-on.sh` - Schedule in 5 minutes (default)
 
 ### restore-flag.sh
 - **Purpose**: Schedules flag restoration from snapshot
 - **Parameters**:
   - Snapshot file (required)
-  - Minutes from now (optional, default: 60)
-- **Usage**: `./restore-flag.sh <snapshot-file> <minutes>`
+  - Time from now (optional, default: 60m)
+- **Supports**: Minutes, hours, and days
+- **Usage**:
+  - `./restore-flag.sh snapshot.json 30m` - Restore in 30 minutes
+  - `./restore-flag.sh snapshot.json 2h` - Restore in 2 hours
+  - `./restore-flag.sh snapshot.json 3d` - Restore in 3 days
+  - `./restore-flag.sh snapshot.json 120` - Restore in 120 minutes (no unit = minutes)
 
 ### turn-flag-off.sh (Bonus)
 - **Purpose**: Immediately turns flag OFF (not scheduled)

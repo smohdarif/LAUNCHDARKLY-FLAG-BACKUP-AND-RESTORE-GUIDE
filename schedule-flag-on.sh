@@ -6,15 +6,91 @@ FLAG_KEY="your-flag-key"                # Example: "promotional-banner" or "feat
 ENVIRONMENT="production"                # Example: "production", "staging", or "test"
 API_TOKEN="your-api-token"              # Get from: https://app.launchdarkly.com/settings/authorization
 
+# Function to convert time with unit to minutes
+convert_to_minutes() {
+    local time_value="$1"
+
+    # If no unit specified, assume minutes
+    if [[ "$time_value" =~ ^[0-9]+$ ]]; then
+        echo "$time_value"
+        return
+    fi
+
+    # Extract number and unit
+    local number="${time_value//[^0-9]/}"
+    local unit="${time_value//[0-9]/}"
+
+    case "$unit" in
+        m|min|mins|minute|minutes)
+            echo "$number"
+            ;;
+        h|hr|hrs|hour|hours)
+            echo "$((number * 60))"
+            ;;
+        d|day|days)
+            echo "$((number * 1440))"
+            ;;
+        *)
+            echo "ERROR: Invalid unit '$unit'. Use m/h/d (minutes/hours/days)" >&2
+            return 1
+            ;;
+    esac
+}
+
 # Calculate timestamp (customize the time delay as needed)
-MINUTES_FROM_NOW=5  # Change this to your desired delay
+# Supported formats: 5m, 2h, 3d, or just 5 (assumes minutes)
+SCHEDULE_TIME="${1:-5m}"  # Default to 5 minutes if not provided
+
+# Convert time to minutes
+MINUTES_FROM_NOW=$(convert_to_minutes "$SCHEDULE_TIME")
+if [ $? -ne 0 ]; then
+    echo "❌ $MINUTES_FROM_NOW"
+    echo ""
+    echo "Usage: $0 <time>"
+    echo ""
+    echo "Time formats supported:"
+    echo "  - Minutes: 5, 5m, 5min, 5minutes"
+    echo "  - Hours:   2h, 2hr, 2hours"
+    echo "  - Days:    3d, 3day, 3days"
+    echo ""
+    echo "Examples:"
+    echo "  $0 5m    # Schedule in 5 minutes"
+    echo "  $0 2h    # Schedule in 2 hours"
+    echo "  $0 3d    # Schedule in 3 days"
+    echo "  $0 30    # Schedule in 30 minutes (no unit = minutes)"
+    exit 1
+fi
+
 NOW=$(date +%s)
 TURN_ON_TIME=$((($NOW + ($MINUTES_FROM_NOW * 60)) * 1000))   # Convert to milliseconds
+
+# Calculate friendly time display
+HOURS=$((MINUTES_FROM_NOW / 60))
+DAYS=$((MINUTES_FROM_NOW / 1440))
+REMAINING_HOURS=$(((MINUTES_FROM_NOW % 1440) / 60))
+REMAINING_MINUTES=$((MINUTES_FROM_NOW % 60))
+
+if [ $MINUTES_FROM_NOW -ge 1440 ]; then
+    if [ $REMAINING_HOURS -eq 0 ]; then
+        TIME_DISPLAY="${DAYS} day(s)"
+    else
+        TIME_DISPLAY="${DAYS} day(s) ${REMAINING_HOURS} hour(s)"
+    fi
+elif [ $MINUTES_FROM_NOW -ge 60 ]; then
+    if [ $REMAINING_MINUTES -eq 0 ]; then
+        TIME_DISPLAY="${HOURS} hour(s)"
+    else
+        TIME_DISPLAY="${HOURS} hour(s) ${REMAINING_MINUTES} minute(s)"
+    fi
+else
+    TIME_DISPLAY="${MINUTES_FROM_NOW} minute(s)"
+fi
 
 echo "🚀 Scheduling flag to turn ON..."
 echo "📅 Flag: ${FLAG_KEY}"
 echo "📅 Project: ${PROJECT_KEY}"
 echo "📅 Environment: ${ENVIRONMENT}"
+echo "⏱️  Time from now: ${TIME_DISPLAY}"
 echo "📅 Scheduled time: $(date -r $(($TURN_ON_TIME/1000)) '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
