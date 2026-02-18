@@ -1,0 +1,20 @@
+# Snapshot files (contain actual flag data)
+flag-snapshot-*.json
+banner-flag-snapshot-*.json
+
+# Any files with actual tokens
+*-local.sh
+*.local.sh
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs
+*.log
